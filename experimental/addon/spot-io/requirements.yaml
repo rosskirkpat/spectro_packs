@@ -1,0 +1,5 @@
+dependencies:
+- name: metrics-server
+  version: 3.8.2
+  repository: https://kubernetes-sigs.github.io/metrics-server
+  condition: metrics-server.deployChart

@@ -1,0 +1,13 @@
+{
+    "addonType":"system app",
+    "cloudTypes": [
+      "all"
+    ],
+    "displayName": "Spot.io Controller",
+    "kubeManifests": [
+      "manifests/spot-io.yaml"
+    ],
+    "layer": "addon",
+    "name": "spotinst-kubernetes-cluster-controller",
+    "version": "1.0.85"
+  }

@@ -1,0 +1,332 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  labels:
+    helm.sh/chart: "spotinst-kubernetes-cluster-controller:1.0.105"
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller
+    k8s-app: spotinst-kubernetes-cluster-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: spotinst-kubernetes-cluster-controller
+subjects:
+- kind: ServiceAccount
+  name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  labels:
+    helm.sh/chart: "spotinst-kubernetes-cluster-controller-1.0.105"
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller    
+    k8s-app: spotinst-kubernetes-cluster-controller
+  
+rules:
+  # ---------------------------------------------------------------------------
+  # feature: ocean/readonly
+  # ---------------------------------------------------------------------------
+- apiGroups: [""]
+  resources: ["pods", "nodes", "services", "namespaces", "replicationcontrollers", "limitranges", "events", "persistentvolumes", "persistentvolumeclaims"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets", "statefulsets", "replicasets"]
+  verbs: ["get", "list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["get", "list"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["get", "list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list"]
+- nonResourceURLs: ["/version/", "/version"]
+  verbs: ["get"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list"]
+  # ---------------------------------------------------------------------------
+  # feature: ocean/draining
+  # ---------------------------------------------------------------------------
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["patch", "update"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["delete"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+  # ---------------------------------------------------------------------------
+  # feature: ocean/cleanup
+  # ---------------------------------------------------------------------------
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["delete"]
+  # ---------------------------------------------------------------------------
+  # feature: ocean/csr-approval
+  # ---------------------------------------------------------------------------
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests"]
+  verbs: ["get", "list", "delete", "create"]
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests/approval"]
+  verbs: ["patch", "update"]
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["signers"]
+  resourceNames: ["kubernetes.io/kubelet-serving", "kubernetes.io/kube-apiserver-client-kubelet"]
+  verbs: ["approve"]
+  # ---------------------------------------------------------------------------
+  # feature: ocean/auto-update
+  # ---------------------------------------------------------------------------
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles"]
+  resourceNames: ["spotinst-kubernetes-cluster-controller"]
+  verbs: ["patch", "update", "escalate"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  resourceNames: ["spotinst-kubernetes-cluster-controller"]
+  verbs: ["patch", "update"]
+  # ---------------------------------------------------------------------------
+  # feature: ocean/apply
+  # ---------------------------------------------------------------------------
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+- apiGroups: ["extensions"]
+  resources: ["daemonsets"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+  # ---------------------------------------------------------------------------
+  # feature: wave
+  # ---------------------------------------------------------------------------
+- apiGroups: ["sparkoperator.k8s.io"]
+  resources: ["sparkapplications", "scheduledsparkapplications"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+- apiGroups: ["wave.spot.io"]
+  resources: ["sparkapplications", "wavecomponents", "waveenvironments"]
+  verbs: ["get", "list"]
+- apiGroups: ["bigdata.spot.io"]
+  resources: ["bigdataenvironments"]
+  verbs: ["get", "list", "patch", "update", "create", "delete"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spotinst-kubernetes-cluster-controller-config
+  namespace: kube-system
+  labels: 
+    k8s-app: spotinst-kubernetes-cluster-controller
+data:
+  spotinst.cluster-identifier: {{ required "`spotinst.clusterIdentifier` must be specified" .Values.spotinst.clusterIdentifier }}
+  base-url: {{ default "" .Values.spotinst.baseUrl | quote }}
+  proxy-url: {{ default "" .Values.spotinst.proxyUrl | quote }}
+  disable-auto-update: {{ default "false" .Values.spotinst.disableAutoUpdate | quote }}
+  enable-csr-approval: {{ default "false" .Values.spotinst.enableCsrApproval | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  labels:
+    helm.sh/chart: spotinst-kubernetes-cluster-controller-1.0.105
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller    
+    k8s-app: spotinst-kubernetes-cluster-controller
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+    k8s-app: spotinst-kubernetes-cluster-controller
+  template:
+    metadata:
+      labels:
+        k8s-app: spotinst-kubernetes-cluster-controller
+      spec:
+      priorityClassName: system-cluster-critical
+      affinity: 
+      {{- if .Values.affinity.nodeAffinity }}
+        nodeAffinity:
+      {{- toYaml .Values.affinity.nodeAffinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity.podAntiAffinity }}
+        podAntiAffinity:
+      {{- toYaml .Values.affinity.podAntiAffinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.pullSecrets | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: spotinst-kubernetes-cluster-controller
+        image: gcr.io/spotinst-artifacts/kubernetes-cluster-controller:1.0.85
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 4401
+          initialDelaySeconds: 300
+          periodSeconds: 20
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 4401
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        env:
+        - name: SPOTINST_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: spotinst-kubernetes-cluster-controller
+              key: token
+              optional: true
+        - name: SPOTINST_ACCOUNT
+          valueFrom:
+            secretKeyRef:
+              name: spotinst-kubernetes-cluster-controller
+              key: account
+              optional: true
+        - name: CLUSTER_IDENTIFIER
+          valueFrom:
+            configMapKeyRef:
+              name: spotinst-kubernetes-cluster-controller-config
+              key: spotinst.cluster-identifier
+        - name: BASE_SPOTINST_URL
+          valueFrom:
+            configMapKeyRef:
+              name: spotinst-kubernetes-cluster-controller-config
+              key: base-url
+              optional: true
+        - name: PROXY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: spotinst-kubernetes-cluster-controller-config
+              key: proxy-url
+              optional: true
+        - name: DISABLE_AUTO_UPDATE
+          valueFrom:
+            configMapKeyRef:
+              name: spotinst-kubernetes-cluster-controller-config
+              key: disable-auto-update
+              optional: true
+        - name: ENABLE_CSR_APPROVAL
+          valueFrom:
+            configMapKeyRef:
+              name: spotinst-kubernetes-cluster-controller-config
+              key: enable-csr-approval
+              optional: true
+        - name: USER_ENV_CERTIFICATES
+          valueFrom:
+            secretKeyRef:
+              name: spotinst-kubernetes-cluster-controller-ca-bundle
+              key: userEnvCertificates.pem
+              optional: true
+        - name: POD_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if .Values.resources }}
+        resources: 
+        {{- toYaml .Values.resources | indent 8 }}
+        {{- end }}
+      serviceAccountName: spotinst-kubernetes-cluster-controller
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{- toYaml .Values.dnsPolicy | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig: {{- toYaml .Values.dnsConfig | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: 
+        {{- toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  labels:
+    helm.sh/chart: "spotinst-kubernetes-cluster-controller-1.0.105"
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller    
+    k8s-app: spotinst-kubernetes-cluster-controller
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "4"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+type: Opaque
+data:
+  token: {{ required "`spotinst.token` must be specified" .Values.spotinst.token | b64enc }}
+  account: {{ required "`spotinst.account` must be specified" .Values.spotinst.account | b64enc }}
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: system-cluster-critical
+  namespace: kube-system
+  labels:
+    helm.sh/chart: "spotinst-kubernetes-cluster-controller-1.0.105"
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller    
+    k8s-app: spotinst-kubernetes-cluster-controller
+value: 1000000000
+description: "Used for critical pods that must run in the cluster, but can be moved to another node if necessary. Priority classes `system-cluster-critical` and `system-node-critical` are limited to `kube-system` namespace. See: https://github.com/kubernetes/kubernetes/issues/60596."
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  labels:
+    helm.sh/chart: "spotinst-kubernetes-cluster-controller-1.0.105"
+    app.kubernetes.io/version: "1.0.85"
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: "spotinst-kubernetes-cluster-controller"
+    app.kubernetes.io/name: ocean-controller
+    k8s-app: spotinst-kubernetes-cluster-controller
+
