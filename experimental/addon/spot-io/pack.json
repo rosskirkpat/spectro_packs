@@ -1,13 +1,14 @@
 {
     "addonType":"system app",
     "cloudTypes": [
-      "all"
+      "aws"
     ],
-    "displayName": "Spot.io Controller",
-    "kubeManifests": [
-      "manifests/spot-io.yaml"
+    "annotations": {},
+    "displayName": "Spot.io Controller (Helm)",
+    "charts": [
+      "charts/spotinst-kubernetes-cluster-controller-1.0.104.tgz"
     ],
     "layer": "addon",
     "name": "spotinst-kubernetes-cluster-controller",
     "version": "1.0.85"
-  }
+}
