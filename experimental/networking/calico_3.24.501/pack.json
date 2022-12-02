@@ -1,0 +1,51 @@
+{
+    "layer":"cni",
+    "cloudTypes": [
+        "aws",
+        "vsphere",
+        "gcp",
+        "maas",
+        "openstack",
+        "edge",
+        "edge-native",
+        "edgenative",
+        "libvirt",
+        "coxedge"
+    ],
+    "annotations": {},
+    "constraints": {
+        "dependencies": [
+          {
+            "packName": "kubernetes",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-eksd",
+            "layer": "k8s",
+            "minVersion": "1.21.2-eks-1-21-6",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-tke",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-konvoy",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          }
+        ]
+    },
+    "displayName": "Calico 3.24.501 - RKE2 (Helm)",
+    "charts": [
+      "charts/rke2-calico-v3.24.501.tgz",
+      "charts/tigera-operator-crd-v3.24.5.tgz"
+    ],
+    "name": "cni-calico-rke2",
+    "version": "3.24.501"
+}

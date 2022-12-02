@@ -1,0 +1,50 @@
+{
+    "layer":"cni",
+    "cloudTypes": [
+        "aws",
+        "vsphere",
+        "gcp",
+        "maas",
+        "openstack",
+        "edge",
+        "edge-native",
+        "edgenative",
+        "libvirt",
+        "coxedge"
+    ],
+    "annotations": {},
+    "constraints": {
+        "dependencies": [
+          {
+            "packName": "kubernetes",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-eksd",
+            "layer": "k8s",
+            "minVersion": "1.21.2-eks-1-21-6",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-tke",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          },
+          {
+            "packName": "kubernetes-konvoy",
+            "layer": "k8s",
+            "minVersion": "1.21.0",
+            "type": "optional"
+          }
+        ]
+    },
+    "displayName": "Calico 3.24.5 - Tigera Operator(Helm)",
+    "charts": [
+      "charts/tigera-operator-v3.24.5.tgz"
+    ],
+    "name": "cni-calico",
+    "version": "3.24.5"
+}
